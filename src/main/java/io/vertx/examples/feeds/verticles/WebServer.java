@@ -4,6 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
@@ -25,6 +26,7 @@ import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.ext.web.templ.HandlebarsTemplateEngine;
 import io.vertx.redis.RedisClient;
 
+import static io.netty.handler.codec.rtsp.RtspHeaders.Names.SESSION;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 public class WebServer extends AbstractVerticle {
@@ -79,7 +81,21 @@ public class WebServer extends AbstractVerticle {
 
 	private Router createRouter() {
 		Router router = Router.router(vertx);
-		router.route().failureHandler(ErrorHandler.create(true));
+
+        CorsHandler corsHandler = CorsHandler.create("*");  //Wildcard(*) not allowed if allowCredentials is true
+        corsHandler.allowCredentials(true);
+        corsHandler.allowedMethod(HttpMethod.OPTIONS);
+        corsHandler.allowedMethod(HttpMethod.GET);
+        corsHandler.allowedMethod(HttpMethod.POST);
+        corsHandler.allowedMethod(HttpMethod.DELETE);
+        corsHandler.allowedHeader("Content-Type");
+
+        router.route().handler(corsHandler);
+        router.route().handler(CookieHandler.create());
+        router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx, SESSION, 10000)));
+        router.route().handler(BodyHandler.create());
+
+        router.route().failureHandler(ErrorHandler.create(true));
 
 		/* Static resources */
 		staticHandler(router);
@@ -92,7 +108,7 @@ public class WebServer extends AbstractVerticle {
 		userContextHandler = new UserContextHandler(mongo);
 
 		/* Dynamic pages */
-		dynamicPages(router);
+//		dynamicPages(router);
 
 		/* API */
 		router.mountSubRouter("/api", apiRouter());
@@ -118,19 +134,19 @@ public class WebServer extends AbstractVerticle {
 		router.route("/assets/*").handler(staticHandler);
 	}
 
-	private void dynamicPages(Router router) {
-		HandlebarsTemplateEngine hbsEngine = HandlebarsTemplateEngine.create();
-		hbsEngine.setMaxCacheSize(0); /* no cache since we wan't hot-reload for templates */
-		TemplateHandler templateHandler = TemplateHandler.create(hbsEngine);
-		router.get("/private/*").handler(userContextHandler::fromSession);
-		router.getWithRegex(".+\\.hbs").handler(context -> {
-			final Session session = context.session();
-			context.data().put("userLogin", session.get("login")); /* in order to greet him */
-			context.data().put("accessToken", session.get("access_token")); /* for api calls */
-			context.next();
-		});
-		router.getWithRegex(".+\\.hbs").handler(templateHandler);
-	}
+//	private void dynamicPages(Router router) {
+//		HandlebarsTemplateEngine hbsEngine = HandlebarsTemplateEngine.create();
+//		hbsEngine.setMaxCacheSize(0); /* no cache since we wan't hot-reload for templates */
+//		TemplateHandler templateHandler = TemplateHandler.create(hbsEngine);
+//		router.get("/private/*").handler(userContextHandler::fromSession);
+//		router.getWithRegex(".+\\.hbs").handler(context -> {
+//			final Session session = context.session();
+//			context.data().put("userLogin", session.get("login")); /* in order to greet him */
+//			context.data().put("accessToken", session.get("access_token")); /* for api calls */
+//			context.next();
+//		});
+//		router.getWithRegex(".+\\.hbs").handler(templateHandler);
+//	}
 
 	private Router apiRouter() {
 		/*

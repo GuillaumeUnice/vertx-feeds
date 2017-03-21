@@ -1,5 +1,6 @@
 package io.vertx.examples.feeds.handlers.api;
 
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.examples.feeds.dao.MongoDAO;
@@ -31,7 +32,9 @@ public class AuthenticationApi {
 			if (result.failed()) {
 				context.fail(result.cause());
 			} else {
-				redirectTo(context, "/login.hbs");
+
+				context.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end("{}");
+//				redirectTo(context, "/login.hbs");
 			}
 		});
 	}
@@ -55,7 +58,8 @@ public class AuthenticationApi {
 			session.put(LOGIN, login);
 			session.put(USER_ID, user.getString("_id"));
 			context.vertx().sharedData().getLocalMap("access_tokens").put(accessToken, user.getString("_id"));
-			redirectTo(context, INDEX);
+//			redirectTo(context, INDEX);
+			context.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end("{\"accessToken\": \"" + accessToken + "\"}");
 		});
 	}
 
@@ -68,7 +72,7 @@ public class AuthenticationApi {
 			context.vertx().sharedData().getLocalMap("access_tokens").remove(accessToken);
 		}
 		session.remove(ACCESS_TOKEN);
-		redirectTo(context, "/login.hbs");
+		context.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json").end("{}");
 	}
 
 	private static void redirectTo(RoutingContext context, String url) {
