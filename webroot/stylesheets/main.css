@@ -59,3 +59,56 @@
 a {
   text-decoration: none;
 }
+
+/* feed */
+.feed .title {
+    font-size: 0.8em;
+}
+
+/* manage */
+.add_button {
+    position: absolute;
+    display: block;
+    right: 0;
+    top: 0;
+    margin-right: 20%;
+    margin-top: 85px;
+    z-index: 900;
+}
+.subscription {
+    margin: 10px 20%;
+}
+.subscription .color_choice {
+    float: right;
+    width: 50px;
+    height: 50px; 
+}
+.subscription .title {
+    font-size: 1.8em;
+}
+
+/* entry */
+.entry {
+	margin:20px 0;
+	padding: 5px;
+	border:1px solid #CFCFCF;
+	border-left:3px solid #CFCFCF;
+	background-color:white;
+}
+
+.entry-title {
+	margin-bottom:10px;
+}
+
+.entry-description {
+	font-style: italic;
+	padding-left:20px;
+}
+
+.entry-pubdate {
+	text-align: right;
+}
+
+.feed .title {
+    font-size: 1.8em;
+}
